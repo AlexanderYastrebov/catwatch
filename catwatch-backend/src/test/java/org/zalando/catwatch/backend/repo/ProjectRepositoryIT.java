@@ -10,14 +10,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.zalando.catwatch.backend.model.Project;
 import org.zalando.catwatch.backend.repo.builder.ProjectBuilder;
 
+@Transactional
 public class ProjectRepositoryIT extends AbstractRepositoryIT {
 
     private final Logger logger = LoggerFactory.getLogger(ProjectRepositoryIT.class);
@@ -72,5 +73,23 @@ public class ProjectRepositoryIT extends AbstractRepositoryIT {
 
         List<Project> projects2 = repository.findProjects("test2", Optional.empty(), Optional.empty());
         assertEquals(1, projects2.size());
+    }
+
+    @Test
+    public void testFindProjectsSnapshotDate(){
+        new ProjectBuilder(repository)
+            .snapshotDate(new Date(1000))
+            .organizationName("test_org")
+            .name("p1")
+            .save();
+
+        new ProjectBuilder(repository)
+            .snapshotDate(new Date(2000))
+            .organizationName("test_org")
+            .name("p1")
+            .save();
+
+        List<Project> projects = repository.findProjects("test_org", new Date(2000), Optional.empty(), Optional.empty());
+        assertEquals(1, projects.size());
     }
 }
